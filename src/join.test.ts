@@ -28,7 +28,7 @@ class Barista {
 }
 
 const initializeJoin = () =>
-  Join.init()
+  Join.init({ log: true })
     .bind({
       fullCoffeeCup: () => new CoffeeCup("full"),
       milkBrick: () => new Milk(100),

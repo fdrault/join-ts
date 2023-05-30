@@ -6,6 +6,7 @@ type Merge<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
 
 export interface JoinConfiguration {
   eagerlyInit: boolean;
+  log: boolean;
 }
 
 export interface JoinInstance<T extends Dependencies<any> = {}> {
@@ -31,6 +32,7 @@ export class Join<T extends Dependencies<any> = {}> implements JoinInstance<T> {
           if (this._dependencies.has(key)) {
             return this._dependencies.get(key);
           } else {
+            this.log(`Creation of ${key} object`);
             const s = (f as Factory<T, any>)(this._getters);
             this._dependencies.set(key, s);
             return s;
@@ -62,15 +64,22 @@ export class Join<T extends Dependencies<any> = {}> implements JoinInstance<T> {
   }
 
   static init<T extends Dependencies<any> = {}>(
-    configuration?: JoinConfiguration
+    configuration?: Partial<JoinConfiguration>
   ): JoinInstance<T> {
     const defaultConfiguration: JoinConfiguration = {
       eagerlyInit: process.env.NODE_ENV === "development",
+      log: false,
     };
     return new Join<T>({
       ...defaultConfiguration,
       ...configuration,
     }) as JoinInstance<T>;
+  }
+
+  private log(message: string) {
+    if (this.configuration.log) {
+      console.log(message);
+    }
   }
 }
 
