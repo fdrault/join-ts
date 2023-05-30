@@ -4,7 +4,7 @@ type Dependencies<T> = { [key: string]: T };
 
 type Merge<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
 
-interface JoinConfiguration {
+export interface JoinConfiguration {
   eagerlyInit: boolean;
 }
 
@@ -21,7 +21,7 @@ export class Join<T extends Dependencies<any> = {}> implements JoinInstance<T> {
   readonly _getters: T = {} as T;
   readonly _dependencies = new Map<string, any>();
 
-  constructor(private configuration: JoinConfiguration) {}
+  private constructor(private configuration: JoinConfiguration) {}
 
   bind<F extends string, U extends Record<F, Factory<T, any>>>(factories: U) {
     type NewDependencies = { [Key in keyof U]: ReturnType<U[Key]> };
@@ -70,7 +70,7 @@ export class Join<T extends Dependencies<any> = {}> implements JoinInstance<T> {
     return new Join<T>({
       ...defaultConfiguration,
       ...configuration,
-    });
+    }) as JoinInstance<T>;
   }
 }
 

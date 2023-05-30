@@ -1,4 +1,4 @@
-import { Join } from "./koin";
+import { Join } from "./join";
 class CoffeeCup {
   constructor(private content: "empty" | "full") {}
   getContent() {
