@@ -1,0 +1,29 @@
+{
+  "name": "join-ts",
+  "version": "1.0.0",
+  "description": "Pragmatic Typescript Dependency Injection",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fdrault/join-ts.git"
+  },
+  "keywords": [
+    "TypeScript",
+    "Dependency",
+    "Injection",
+    "DI"
+  ],
+  "author": "Fabien Drault",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fdrault/join-ts/issues"
+  },
+  "homepage": "https://github.com/fdrault/join-ts#readme",
+  "devDependencies": {
+    "@types/jest": "^29.5.1",
+    "ts-jest": "^29.1.0"
+  }
+}
