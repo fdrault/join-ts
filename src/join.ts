@@ -67,7 +67,7 @@ export class Join<T extends Dependencies<any> = {}> implements JoinInstance<T> {
     configuration?: Partial<JoinConfiguration>
   ): JoinInstance<T> {
     const defaultConfiguration: JoinConfiguration = {
-      eagerlyInit: process.env.NODE_ENV === "development",
+      eagerlyInit: false,
       log: false,
     };
     return new Join<T>({
