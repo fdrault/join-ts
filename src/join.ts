@@ -9,6 +9,11 @@ export interface JoinConfiguration {
   log: boolean;
 }
 
+// bindPrivate
+// bindInternal
+// bindPublic
+
+// bind({})
 export interface JoinInstance<T extends Dependencies<any> = {}> {
   bind<F extends string, U extends Record<F, Factory<T, any>>>(
     factory: U
