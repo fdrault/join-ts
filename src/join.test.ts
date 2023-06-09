@@ -1,4 +1,5 @@
 import { Join } from "./join";
+import { JoinModuleInternal } from "./module";
 class CoffeeCup {
   constructor(private content: "empty" | "full") {}
   getContent() {
@@ -27,15 +28,23 @@ class Barista {
   }
 }
 
-const foo = Join.init({ log: true }).bind({
+const buildModule = () =>
+  new JoinModuleInternal({ log: true, eagerlyInit: false });
+const foo = buildModule().internal({
   fullCoffeeCup: () => new CoffeeCup("full"),
 });
 
-const bar = Join.init({ log: true }).bind({
+const bar = buildModule().internal({
   milkBrick: () => new Milk(100),
 });
 
-const foobar = Join.init().includes(foo, bar);
+const foobar = buildModule().modules(foo).modules(bar);
+//, bar)
+
+const container = foobar.public({
+  barista: ({ fullCoffeeCup, milkBrick }) =>
+    new Barista(fullCoffeeCup, milkBrick),
+});
 
 const initializeJoin = () =>
   Join.init({ log: true })
