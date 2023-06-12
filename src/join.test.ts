@@ -38,7 +38,7 @@ const bar = buildModule().internal({
   milkBrick: () => new Milk(100),
 });
 
-const foobar = buildModule().modules(foo).modules(bar);
+const foobar = buildModule().modules(foo, bar);
 //, bar)
 
 const container = foobar.public({

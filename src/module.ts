@@ -54,13 +54,46 @@ import { Dependencies, Factory, JoinConfiguration, Merge } from "./types";
 //     Private
 //   >;
 // }
+type MergeVariadic<T extends JoinModuleInternal<any, any, any>[]> = T extends [
+  infer First,
+  infer Second,
+  ...infer Rest
+]
+  ? First extends JoinModuleInternal<
+      infer Public,
+      infer Internal,
+      infer Private
+    >
+    ? Second extends JoinModuleInternal<
+        infer PublicSecond,
+        infer InternalSecond,
+        any
+      >
+      ? Rest extends JoinModuleInternal<any, any, any>[]
+        ? MergeVariadic<
+            [
+              JoinModuleInternal<
+                Merge<Public & PublicSecond>,
+                Merge<Internal & InternalSecond>,
+                Private
+              >,
+              ...Rest
+            ]
+          >
+        : JoinModuleInternal<
+            Merge<Public & PublicSecond>,
+            Merge<Internal & InternalSecond>,
+            Private
+          >
+      : T
+    : T
+  : T;
 
 export class JoinModuleInternal<
   Public extends Dependencies<any> = {},
   Internal extends Dependencies<any> = {},
   Private extends Dependencies<any> = {}
-> implements JoinModuleInternal<Public, Internal, Private>
-{
+> {
   publicResolver = Resolver.init();
   internalResolver = Resolver.init();
   privateResolver = Resolver.init();
@@ -114,27 +147,18 @@ export class JoinModuleInternal<
     >;
   }
 
-  modules<
-    MPublic extends Dependencies<any>,
-    MInternal extends Dependencies<any>,
-    MPrivate extends Dependencies<any>
-  >(...modules: JoinModuleInternal<MPublic, MInternal, MPrivate>[]) {
+  modules<T extends JoinModuleInternal<any, any, any>[]>(
+    ...modules: T
+  ): MergeVariadic<T> {
     this.publicResolver = Resolver.merge(
       this.publicResolver,
-      ...modules.map(
-        (m) =>
-          (m as JoinModuleInternal<MPublic, MInternal, MPrivate>).publicResolver
-      )
+      ...modules.map((m) => (m as JoinModuleInternal).publicResolver)
     );
     this.internalResolver = Resolver.merge(
       this.internalResolver,
       ...modules.map((m) => (m as JoinModuleInternal).internalResolver)
     );
 
-    return this as JoinModuleInternal<
-      Merge<Public & MPublic>,
-      Merge<Internal & MInternal>,
-      Private
-    >;
+    return this as MergeVariadic<T>;
   }
 }
