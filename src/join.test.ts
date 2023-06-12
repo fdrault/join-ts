@@ -30,42 +30,35 @@ class Barista {
 
 const buildModule = () =>
   new JoinModuleInternal({ log: true, eagerlyInit: false });
-const foo = buildModule().internal({
-  fullCoffeeCup: () => new CoffeeCup("full"),
-});
+const cupModule = buildModule()
+  .internal({
+    fullCoffeeCup: () => new CoffeeCup("full"),
+  })
+  .private({ emptyCup: () => new CoffeeCup("empty") });
 
-const bar = buildModule().internal({
-  milkBrick: () => new Milk(100),
-});
+const milkModule = buildModule()
+  .internal({
+    milkBrick: () => new Milk(100),
+  })
+  .private({ emptyMilkBrick: () => new Milk(0) });
 
-const foobar = buildModule().modules(foo, bar);
+const warehouseModule = buildModule().modules(cupModule, milkModule);
 //, bar)
 
-const container = foobar.public({
+const coffeeShopModule = warehouseModule.public({
   barista: ({ fullCoffeeCup, milkBrick }) =>
     new Barista(fullCoffeeCup, milkBrick),
 });
 
-const initializeJoin = () =>
-  Join.init({ log: true })
-    .bind({
-      fullCoffeeCup: () => new CoffeeCup("full"),
-      milkBrick: () => new Milk(100),
-    })
-    .bind({
-      barista: ({ fullCoffeeCup, milkBrick }) =>
-        new Barista(fullCoffeeCup, milkBrick),
-    });
+const initializeJoin = () => {
+  return Join.init({ log: true }).modules(coffeeShopModule);
+};
+
 describe("Check ts-jest", () => {
   let joinInstance: ReturnType<typeof initializeJoin>;
 
   beforeAll(() => {
     joinInstance = initializeJoin();
-  });
-
-  test("fullCoffeeCup is correctly instantiate", () => {
-    const { fullCoffeeCup } = joinInstance.inject();
-    expect(fullCoffeeCup.getContent() === "full").toBe(true);
   });
 
   test("Barista instantiate his dependencies automatically", () => {

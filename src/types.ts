@@ -8,9 +8,3 @@ export interface JoinConfiguration {
   eagerlyInit: boolean;
   log: boolean;
 }
-
-type EE = Factory<string, number>;
-
-type First<E> = E extends Factory<infer X, any> ? X : never;
-
-type a = First<EE>;

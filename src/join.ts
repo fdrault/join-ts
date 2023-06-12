@@ -1,10 +1,24 @@
-import { JoinModule, JoinModuleInternal } from "./module";
+import { JoinModuleInternal } from "./module";
+import { Dependencies, Merge } from "./types";
 
-type Factory<T, U> = (deps: T) => U;
-
-type Dependencies<T> = { [key: string]: T };
-
-type Merge<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
+type MergePublic<T extends JoinModuleInternal<any, any, any>[]> = T extends [
+  JoinModuleInternal<infer Public, any, any>,
+  ...infer Rest
+]
+  ? Rest extends [
+      JoinModuleInternal<infer PublicSecond, any, any>,
+      ...infer RestSecond
+    ]
+    ? RestSecond extends JoinModuleInternal<any, any, any>[]
+      ? MergePublic<
+          [
+            JoinModuleInternal<Merge<Public & PublicSecond>, any, any>,
+            ...RestSecond
+          ]
+        >
+      : Merge<Public & PublicSecond>
+    : Public
+  : never;
 
 export interface JoinConfiguration {
   eagerlyInit: boolean;
@@ -12,30 +26,25 @@ export interface JoinConfiguration {
 }
 
 export interface JoinInstance<T extends Dependencies<any> = {}> {
-  modules<V extends Dependencies<any>>(
-    ...modules: JoinModule<V>[]
-  ): JoinInstance<{
-    [Key in keyof V]: ReturnType<V[Key]>;
-  }>;
+  modules<T extends JoinModuleInternal<any, any, any>[]>(
+    ...modules: T
+  ): JoinInstance<MergePublic<T>>;
   inject(): T;
 }
 export class Join<T extends Dependencies<any> = {}> implements JoinInstance<T> {
   private constructor(private configuration: JoinConfiguration) {}
-  private rootModule: JoinModule = new JoinModuleInternal({
+  private rootModule = new JoinModuleInternal({
     log: true,
     eagerlyInit: false,
   });
 
-  modules<V extends Dependencies<any>>(...modules: JoinModule<V>[]) {
-    this.rootModule = this.rootModule.modules(
-      ...(modules as JoinModuleInternal<V>[])
-    );
-    return this as unknown as JoinInstance<{
-      [Key in keyof V]: ReturnType<V[Key]>;
-    }>;
+  modules<T extends JoinModuleInternal<any, any, any>[]>(...modules: T) {
+    this.rootModule = this.rootModule.modules(this.rootModule, ...modules);
+    return this as unknown as JoinInstance<MergePublic<T>>;
   }
 
   inject(): T {
+    console.log(JSON.stringify(this.rootModule.publicResolver._getters));
     return (this.rootModule as JoinModuleInternal<T>).publicResolver
       ._getters as T;
   }

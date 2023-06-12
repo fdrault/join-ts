@@ -54,40 +54,29 @@ import { Dependencies, Factory, JoinConfiguration, Merge } from "./types";
 //     Private
 //   >;
 // }
-type MergeVariadic<T extends JoinModuleInternal<any, any, any>[]> = T extends [
-  infer First,
-  infer Second,
+
+type MergeModules<T extends JoinModuleInternal<any, any, any>[]> = T extends [
+  JoinModuleInternal<infer Public, infer Internal, any>,
   ...infer Rest
 ]
-  ? First extends JoinModuleInternal<
-      infer Public,
-      infer Internal,
-      infer Private
-    >
-    ? Second extends JoinModuleInternal<
-        infer PublicSecond,
-        infer InternalSecond,
-        any
-      >
-      ? Rest extends JoinModuleInternal<any, any, any>[]
-        ? MergeVariadic<
-            [
-              JoinModuleInternal<
-                Merge<Public & PublicSecond>,
-                Merge<Internal & InternalSecond>,
-                Private
-              >,
-              ...Rest
-            ]
-          >
-        : JoinModuleInternal<
-            Merge<Public & PublicSecond>,
-            Merge<Internal & InternalSecond>,
-            Private
-          >
-      : T
-    : T
-  : T;
+  ? Rest extends [
+      JoinModuleInternal<infer PublicSecond, infer InternalSecond, any>,
+      ...infer RestSecond
+    ]
+    ? RestSecond extends JoinModuleInternal<any, any, any>[]
+      ? MergeModules<
+          [
+            JoinModuleInternal<
+              Merge<Public & PublicSecond>,
+              Merge<Internal & InternalSecond>,
+              {}
+            >,
+            ...RestSecond
+          ]
+        >
+      : JoinModuleInternal<Public, Internal, {}>
+    : JoinModuleInternal<Public, Internal, {}>
+  : never;
 
 export class JoinModuleInternal<
   Public extends Dependencies<any> = {},
@@ -149,7 +138,7 @@ export class JoinModuleInternal<
 
   modules<T extends JoinModuleInternal<any, any, any>[]>(
     ...modules: T
-  ): MergeVariadic<T> {
+  ): MergeModules<T> {
     this.publicResolver = Resolver.merge(
       this.publicResolver,
       ...modules.map((m) => (m as JoinModuleInternal).publicResolver)
@@ -159,6 +148,6 @@ export class JoinModuleInternal<
       ...modules.map((m) => (m as JoinModuleInternal).internalResolver)
     );
 
-    return this as MergeVariadic<T>;
+    return this as unknown as MergeModules<T>;
   }
 }
